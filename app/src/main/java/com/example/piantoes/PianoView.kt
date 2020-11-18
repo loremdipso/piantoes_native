@@ -8,6 +8,7 @@ import androidx.core.content.res.ResourcesCompat
 
 
 private const val STROKE_WIDTH = 12f
+private const val LINE_WIDTH = 9f
 private const val TEXT_SIZE = 150F
 
 class Drawer {
@@ -25,6 +26,7 @@ class Drawer {
         blue = ResourcesCompat.getColor(resources, R.color.blue, null)
         yellow = ResourcesCompat.getColor(resources, R.color.yellow, null)
         background = ResourcesCompat.getColor(resources, R.color.background, null)
+        SVG.getFromResource(resources, R.raw.treble_clef)
     }
 
     fun getFill(colorVal: Int): Paint {
@@ -57,6 +59,10 @@ class Drawer {
             textAlign = Paint.Align.CENTER
             textSize = TEXT_SIZE
         }
+    }
+
+    fun drawLine(canvas: Canvas, startX: Int, startY: Int, stopX: Int, stopY: Int) {
+		canvas.drawLine(startX.toFloat(), startY.toFloat(), stopX.toFloat(), stopY.toFloat(), getStroke(black).apply { strokeWidth = LINE_WIDTH })
     }
 
     fun drawRect(canvas: Canvas, rect: Rect, fillColor: Int, strokeColor: Int? = null) {
@@ -136,6 +142,11 @@ class PianoView: View {
 
     fun drawSheetMusic(canvas: Canvas, rect: Rect) {
         drawer.drawRect(canvas, rect, drawer.white)
+
+		var y = rect.top + 50
+        var startX = rect.left
+        var stopX = rect.right
+        drawer.drawLine(canvas, startX, y, stopX, y)
     }
 
     fun drawKeys(canvas: Canvas, rect: Rect) {
