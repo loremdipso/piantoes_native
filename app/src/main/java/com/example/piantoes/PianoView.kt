@@ -175,9 +175,9 @@ class PianoView : View {
 
 	fun getRandomNote() {
 		var range = 20
-//		note = ((MIDDLE_C - range)..(MIDDLE_C + range)).random()
+		note = ((MIDDLE_C - range)..(MIDDLE_C + range)).random()
 //		note = MIDDLE_C + 1 // let's assume this is middle C
-		note = MIDDLE_C - 1
+//		note = MIDDLE_C + 5
 	}
 
 	fun drawText(canvas: Canvas, rect: Rect) {
@@ -257,14 +257,55 @@ class PianoView : View {
 		return rv
 	}
 
+	// TODO: we shouldn't need two functions for this
+	private fun getNumSharpsStrict(start: Int, end: Int): Int {
+		var rv = 0
+		for (n in start..end) {
+			if (isSharp(n)) {
+				rv++
+			}
+		}
+		return rv
+	}
+
 	fun drawKeys(canvas: Canvas, rect: Rect) {
 		drawer.drawRect(canvas, rect, drawer.blue)
 
-//        drawer.drawRect(canvas, rect.left, rect.top, 50, 50, drawer.white, drawer.black)
-		if (isSharp(note)) {
-			drawer.drawRect(canvas, rect.left + 60, rect.top, 50, 50, drawer.white, drawer.black)
-		} else {
-			drawer.drawRect(canvas, rect.left + 60, rect.top, 50, 50, drawer.white, drawer.white)
+		var noteWidth = rect.width() / 7
+		var noteHeight = rect.height()
+		var blackNoteHeight = rect.bottom - rect.top
+
+//		var noteOffset = note - numKeys / 2
+		var noteOffset = 3 // get a good starting place
+
+		var targetNode = note % numKeys
+
+		// TODO: deduplicate
+		// white keys
+		for (i in (0..numKeys)) {
+			var tempNote = i + noteOffset
+			var tempI = i - getNumSharpsStrict(noteOffset, tempNote - 1)
+			if (!isSharp(tempNote)) {
+				var foreground = drawer.white
+				var background = drawer.black
+				if (targetNode == tempNote) {
+					foreground = drawer.red
+				}
+				drawer.drawRect(canvas, noteWidth * tempI, rect.top, noteWidth, noteHeight, foreground, background)
+			}
+		}
+
+		for (i in (0..numKeys)) {
+			var tempNote = i + noteOffset
+			var tempI = i - getNumSharpsStrict(noteOffset, tempNote - 1)
+			if (isSharp(tempNote)) {
+				var foreground = drawer.black
+				var background = drawer.black
+				if (targetNode == tempNote) {
+					foreground = drawer.red
+				}
+				drawer.drawRect(canvas, noteWidth * tempI - noteWidth / 4, rect.top, noteWidth / 2, noteHeight / 2, foreground, background)
+			}
 		}
 	}
 }
