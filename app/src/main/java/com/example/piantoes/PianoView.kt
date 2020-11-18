@@ -11,6 +11,7 @@ import com.caverock.androidsvg.SVG
 private const val STROKE_WIDTH = 12f
 private const val LINE_WIDTH = 9f
 private const val TEXT_SIZE = 150F
+private const val MIDDLE_C = 39
 
 class Drawer {
 	var black: Int;
@@ -99,12 +100,19 @@ class Drawer {
 		}
 	}
 
-	fun drawNote(canvas: Canvas, centerXIn: Int, centerYIn: Int, isSharp: Boolean) {
+	fun drawNote(canvas: Canvas, centerXIn: Int, centerYIn: Int, isSharp: Boolean, shouldDrawLine: Boolean) {
 		val noteWidth = 80
 		val noteHeight = noteWidth * 2
 		var centerX = centerXIn
 		var centerY = centerYIn - (noteHeight * 0.35).toInt()
 		drawSVG(canvas, Rect(centerX - noteWidth / 2, centerY - noteHeight / 2, centerX + noteWidth / 2, centerY + noteHeight / 2), quarter_note)
+
+		if (shouldDrawLine) {
+			var lineWidth = (noteWidth * 1.5).toInt()
+			var lineMarginY = noteHeight * -0.13
+			var lineY = (centerY + noteHeight / 2 + lineMarginY).toInt()
+			drawLine(canvas, centerX - lineWidth / 2, lineY, centerX + lineWidth / 2, lineY)
+		}
 
 		if (isSharp) {
 			val sharpWidth = (noteHeight * 0.625).toInt()
@@ -163,7 +171,8 @@ class PianoView : View {
 	}
 
 	fun getRandomNote() {
-		note = (0..88).random()
+//		note = (0..88).random()
+		note = MIDDLE_C + 1 // let's assume this is middle C
 	}
 
 	fun drawText(canvas: Canvas, rect: Rect) {
@@ -179,12 +188,12 @@ class PianoView : View {
 
 		// silly distinction, but w/e
 		// TODO: also, is this the right split?
-		val isTreble = note >= 44
+		val isBase = note < MIDDLE_C
 
-		if (isTreble) {
-			drawer.drawSVG(canvas, svgRect, drawer.treble_clef)
-		} else {
+		if (isBase) {
 			drawer.drawSVG(canvas, svgRect, drawer.base_clef)
+		} else {
+			drawer.drawSVG(canvas, svgRect, drawer.treble_clef)
 		}
 
 		val yMargin = 150
@@ -199,8 +208,23 @@ class PianoView : View {
 		}
 
 		// TDOO: make this more correct
-		var y = top + (lineMargin / 2) * 1
-		drawer.drawNote(canvas, (stopX - startX) / 2, y, isSharp(note))
+		var myNote = note
+		if (isSharp(note)) {
+//			myNote -= 1
+		}
+		var relativeIndex = (MIDDLE_C - myNote) % numKeys
+
+		var shouldDrawLine = false
+		if (isBase) {
+		} else {
+			relativeIndex = (relativeIndex * -1) + 10
+		}
+
+		if (relativeIndex % 2 == 0 && (relativeIndex < 0 || relativeIndex > 9)) {
+			shouldDrawLine = true
+		}
+		var y = top + (lineMargin / 2) * relativeIndex
+		drawer.drawNote(canvas, (stopX - startX) / 2, y, isSharp(note), shouldDrawLine)
 	}
 
 	fun drawKeys(canvas: Canvas, rect: Rect) {
