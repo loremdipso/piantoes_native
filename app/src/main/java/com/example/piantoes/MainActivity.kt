@@ -1,13 +1,14 @@
 package com.example.piantoes
 
-import androidx.appcompat.app.AppCompatActivity
+import android.app.ActionBar
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
+	override fun onCreate(savedInstanceState: Bundle?) {
+		super.onCreate(savedInstanceState)
 //        setContentView(R.layout.activity_main)
-        val myCanvasView = PianoView(this)
-        setContentView(myCanvasView)
-    }
+		val myCanvasView = PianoView(this)
+		setContentView(myCanvasView)
+	}
 }

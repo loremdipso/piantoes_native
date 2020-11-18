@@ -139,7 +139,7 @@ fun isSharp(note: Int): Boolean {
 	}
 }
 
-class PianoView : View {
+class PianoView : View, View.OnClickListener {
 	private lateinit var extraCanvas: Canvas
 	private lateinit var extraBitmap: Bitmap
 	private val drawer = Drawer(resources)
@@ -147,6 +147,7 @@ class PianoView : View {
 
 	constructor(context: Context) : super(context) {
 		getRandomNote()
+		this.setOnClickListener(this)
 	}
 
 	override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
@@ -155,6 +156,11 @@ class PianoView : View {
 		extraBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888)
 		extraCanvas = Canvas(extraBitmap)
 		extraCanvas.drawColor(drawer.background)
+	}
+
+	override fun onClick(v: View) {
+		getRandomNote()
+		invalidate() // force redraw
 	}
 
 	override fun onDraw(canvas: Canvas) {
@@ -178,6 +184,7 @@ class PianoView : View {
 		note = ((MIDDLE_C - range)..(MIDDLE_C + range)).random()
 //		note = MIDDLE_C + 1 // let's assume this is middle C
 //		note = MIDDLE_C + 5
+//		note = 38
 	}
 
 	fun drawText(canvas: Canvas, rect: Rect) {
@@ -280,6 +287,7 @@ class PianoView : View {
 
 		var targetNode = note % numKeys
 
+		var didIt = false
 		// TODO: deduplicate
 		// white keys
 		for (i in (0..numKeys)) {
@@ -288,7 +296,7 @@ class PianoView : View {
 			if (!isSharp(tempNote)) {
 				var foreground = drawer.white
 				var background = drawer.black
-				if (targetNode == tempNote) {
+				if (targetNode == tempNote % numKeys) {
 					foreground = drawer.red
 				}
 				drawer.drawRect(canvas, noteWidth * tempI, rect.top, noteWidth, noteHeight, foreground, background)
@@ -301,7 +309,7 @@ class PianoView : View {
 			if (isSharp(tempNote)) {
 				var foreground = drawer.black
 				var background = drawer.black
-				if (targetNode == tempNote) {
+				if (targetNode == tempNote % numKeys) {
 					foreground = drawer.red
 				}
 				drawer.drawRect(canvas, noteWidth * tempI - noteWidth / 4, rect.top, noteWidth / 2, noteHeight / 2, foreground, background)
