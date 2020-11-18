@@ -6,6 +6,9 @@ import android.graphics.*
 import android.view.View
 import androidx.core.content.res.ResourcesCompat
 import com.caverock.androidsvg.SVG
+import java.lang.Math.*
+import kotlin.math.pow
+import kotlin.math.roundToInt
 
 
 private const val STROKE_WIDTH = 12f
@@ -131,7 +134,7 @@ fun getName(note: Int): String {
 
 fun isSharp(note: Int): Boolean {
 	when (note % numKeys) {
-		1, 4, 6, 9 -> return true
+		1, 4, 6, 9, 11 -> return true
 		else -> return false
 	}
 }
@@ -171,8 +174,10 @@ class PianoView : View {
 	}
 
 	fun getRandomNote() {
-//		note = (0..88).random()
-		note = MIDDLE_C + 1 // let's assume this is middle C
+		var range = 20
+//		note = ((MIDDLE_C - range)..(MIDDLE_C + range)).random()
+//		note = MIDDLE_C + 1 // let's assume this is middle C
+		note = MIDDLE_C - 1
 	}
 
 	fun drawText(canvas: Canvas, rect: Rect) {
@@ -186,8 +191,6 @@ class PianoView : View {
 		val svgWidth = 150
 		val svgRect = Rect(rect.left, rect.top, rect.left + svgWidth, rect.bottom)
 
-		// silly distinction, but w/e
-		// TODO: also, is this the right split?
 		val isBase = note < MIDDLE_C
 
 		if (isBase) {
@@ -198,12 +201,13 @@ class PianoView : View {
 
 		val yMargin = 150
 		val xMargin = 0
-		val top = rect.top + yMargin
+		val myTop = rect.top + yMargin
+		val myBottom = rect.bottom - yMargin
 		val lineMargin = ((rect.bottom - rect.top) - (yMargin * 2)) / 4
 		var startX = rect.left + xMargin
 		var stopX = rect.right
 		for (i in 0 until 5) {
-			var y = top + lineMargin * i
+			var y = myTop + lineMargin * i
 			drawer.drawLine(canvas, startX, y, stopX, y)
 		}
 
@@ -212,19 +216,45 @@ class PianoView : View {
 		if (isSharp(note)) {
 //			myNote -= 1
 		}
-		var relativeIndex = (MIDDLE_C - myNote) % numKeys
+
+		var relativeIndex = (myNote - MIDDLE_C)
 
 		var shouldDrawLine = false
+		var y = 0
 		if (isBase) {
-		} else {
-			relativeIndex = (relativeIndex * -1) + 10
-		}
+			var numSharps = getNumSharps(myNote + 1, MIDDLE_C)
+			relativeIndex += numSharps
+			var C_OFFSET = 2 // so we start at middle C
+			relativeIndex += C_OFFSET
+			y = myTop - (lineMargin / 2) * relativeIndex
 
-		if (relativeIndex % 2 == 0 && (relativeIndex < 0 || relativeIndex > 9)) {
-			shouldDrawLine = true
+			if (relativeIndex % 2 == 0 && relativeIndex > 1) {
+				shouldDrawLine = true
+			}
+		} else {
+			var numSharps = getNumSharps(myNote, MIDDLE_C)
+			relativeIndex -= numSharps
+			var C_OFFSET = -2 // so we start at middle C
+			relativeIndex += C_OFFSET
+			y = myBottom - (lineMargin / 2) * relativeIndex
+
+			if (relativeIndex % 2 == 0 && ((relativeIndex - C_OFFSET) <= 0 || (relativeIndex - C_OFFSET) > numKeys)) {
+				shouldDrawLine = true
+			}
 		}
-		var y = top + (lineMargin / 2) * relativeIndex
 		drawer.drawNote(canvas, (stopX - startX) / 2, y, isSharp(note), shouldDrawLine)
+	}
+
+	private fun getNumSharps(startIn: Int, endIn: Int): Int {
+		var start = kotlin.math.min(startIn, endIn)
+		var end = kotlin.math.max(startIn, endIn)
+		var rv = 0
+		for (n in start..end) {
+			if (isSharp(n)) {
+				rv++
+			}
+		}
+		return rv
 	}
 
 	fun drawKeys(canvas: Canvas, rect: Rect) {
