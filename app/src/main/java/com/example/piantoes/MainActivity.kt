@@ -10,5 +10,7 @@ class MainActivity : AppCompatActivity() {
 //        setContentView(R.layout.activity_main)
 		val myCanvasView = PianoView(this)
 		setContentView(myCanvasView)
+
+		supportActionBar?.hide()
 	}
 }
