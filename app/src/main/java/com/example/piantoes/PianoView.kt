@@ -2,10 +2,7 @@ package com.example.piantoes
 
 import android.annotation.SuppressLint
 import android.content.Context
-import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Point
-import android.graphics.Rect
+import android.graphics.*
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnClickListener
@@ -14,10 +11,31 @@ import android.view.View.OnTouchListener
 private const val MIDDLE_C = 39
 private const val C_RANGE = 25
 
-var keys = arrayOf("A", "A Sharp", "B", "C", "C Sharp", "D", "D Sharp", "E", "F", "F Sharp", "G", "G Sharp")
+var keys = arrayOf("A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#")
 val numKeys = keys.size
 fun getName(note: Int): String {
 	return keys[note % keys.size]
+}
+
+
+var trebleLineNames = arrayOf("F", "D", "B", "G", "E")
+var baseLineNames = arrayOf("A", "F", "D", "B", "G")
+private fun getLineName(i: Int, inBase: Boolean): String {
+	if (!inBase) {
+		return trebleLineNames[i]
+	} else {
+		return baseLineNames[i]
+	}
+}
+
+var trebleSpaceNames = arrayOf("E", "C", "A", "F")
+var baseSpaceNames = arrayOf("G", "E", "C", "A")
+private fun getSpaceName(i: Int, inBase: Boolean): String {
+	if (!inBase) {
+		return trebleSpaceNames[i]
+	} else {
+		return baseSpaceNames[i]
+	}
 }
 
 fun isSharp(note: Int): Boolean {
@@ -38,6 +56,8 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 	private var note: Int = MIDDLE_C
 	private var showAll = true
 	private var showText = true
+	private var showLabels = false
+	private var showSpaces = false
 
 	constructor(context: Context) : super(context) {
 		getRandomNote()
@@ -76,6 +96,16 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		} else if (sheetMusicRect.contains(x, y)) {
 			if (x < width / 5) { // if we press on the far left, toggle show all
 				showAll = !showAll
+			} else if (x > width / 5 * 4) { // if we press on the far left, toggle show all
+				if (!showLabels) {
+					showLabels = true
+					showSpaces = false
+				} else if (!showSpaces) {
+					showSpaces = true
+				} else {
+					showLabels = false
+					showSpaces = false
+				}
 			} else { // otherwise swap the random notes
 				getRandomNote()
 			}
@@ -192,9 +222,34 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		val lineMargin = ((rect.bottom - rect.top) - (yMargin * 2)) / 4
 		var startX = rect.left + xMargin
 		var stopX = rect.right
+
+		var paint = drawer.getFill(drawer.black).apply {
+			textSize = 50F
+			textAlign = Paint.Align.LEFT
+		}
 		for (i in 0 until 5) {
 			var y = myTop + lineMargin * i
-			drawer.drawLine(canvas, startX, y, stopX, y)
+			var rightMargin = 0
+			if (showLabels) {
+				rightMargin = 100
+			}
+			drawer.drawLine(canvas, startX, y, stopX - rightMargin, y)
+
+			if (showLabels) {
+				var text = getLineName(i, isInBase(note))
+				var ty = y
+				if (showSpaces) {
+					if (i >= 4) {
+						continue;
+					}
+					text = getSpaceName(i, isInBase(note))
+					ty += lineMargin / 2
+				}
+
+				var textBounds = Rect()
+				paint.getTextBounds(text, 0, text.length, textBounds)
+				canvas.drawText(text, rect.right - rightMargin + 30F, ty - textBounds.exactCenterY(), paint)
+			}
 		}
 
 		var notes: MutableList<Int> = ArrayList()
