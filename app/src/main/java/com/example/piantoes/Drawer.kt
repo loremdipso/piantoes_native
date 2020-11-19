@@ -49,9 +49,9 @@ class Drawer {
 	}
 
 	fun drawSVG(canvas: Canvas, rect: Rect, svg: SVG) {
-		svg.documentHeight = (rect.bottom - rect.top).toFloat();
-		svg.documentWidth = (rect.right - rect.left).toFloat();
-		val bitmap = Bitmap.createBitmap(rect.right - rect.left, rect.bottom - rect.top, Bitmap.Config.ARGB_8888)
+		svg.documentHeight = rect.height().toFloat();
+		svg.documentWidth = rect.width().toFloat();
+		val bitmap = Bitmap.createBitmap(rect.width(), rect.height(), Bitmap.Config.ARGB_8888)
 		val scratchCanvas = Canvas(bitmap)
 		svg.renderToCanvas(scratchCanvas)
 		canvas.drawBitmap(bitmap, null, rect, null)
@@ -91,25 +91,33 @@ class Drawer {
 		return rect
 	}
 
-	fun drawNote(canvas: Canvas, centerXIn: Int, centerYIn: Int, isSharp: Boolean, shouldDrawLine: Boolean) {
-		val noteWidth = 80
-		val noteHeight = noteWidth * 2
+	fun drawNote(canvas: Canvas, centerXIn: Int, centerYIn: Int, isSharp: Boolean, shouldDrawLine: Boolean, yOffset: Int) {
+		val noteWidth = 70
+		val noteHeight = ((noteWidth * quarter_note.documentHeight) / quarter_note.documentWidth).toInt()
 		var centerX = centerXIn
-		var centerY = centerYIn - (noteHeight * 0.35).toInt()
-		drawSVG(canvas, Rect(centerX - noteWidth / 2, centerY - noteHeight / 2, centerX + noteWidth / 2, centerY + noteHeight / 2), quarter_note)
+		var centerY = centerYIn
+
+//		val noteYOffset = -(42F * noteHeight / 320F).toInt()
+		val noteYOffset = -10
+		drawSVG(
+				canvas,
+				Rect(centerX - noteWidth / 2,
+						centerY - noteHeight + noteYOffset,
+						centerX + noteWidth / 2,
+						centerY + noteYOffset
+				), quarter_note)
 
 		if (shouldDrawLine) {
 			var lineWidth = (noteWidth * 1.5).toInt()
-			var lineMarginY = noteHeight * -0.13
-			var lineY = (centerY + noteHeight / 2 + lineMarginY).toInt()
+			var lineY = centerY - yOffset
 			drawLine(canvas, centerX - lineWidth / 2, lineY, centerX + lineWidth / 2, lineY)
 		}
 
 		if (isSharp) {
-			val sharpWidth = (noteHeight * 0.625).toInt()
+			val sharpWidth = (noteWidth * 0.75).toInt()
+			val sharpYOffset = 0
 			centerX -= noteWidth
-			centerY += (noteHeight * 0.35).toInt()
-			drawSVG(canvas, Rect(centerX - sharpWidth / 2, centerY - sharpWidth / 2, centerX + sharpWidth / 2, centerY + sharpWidth / 2), sharp)
+			drawSVG(canvas, Rect(centerX - sharpWidth / 2, centerY - sharpWidth + sharpYOffset, centerX + sharpWidth / 2, centerY + sharpYOffset), sharp)
 		}
 	}
 }

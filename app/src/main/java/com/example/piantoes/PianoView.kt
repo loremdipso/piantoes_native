@@ -12,7 +12,7 @@ import android.view.View.OnClickListener
 import android.view.View.OnTouchListener
 
 private const val MIDDLE_C = 39
-private const val C_RANGE = 20
+private const val C_RANGE = 25
 
 var keys = arrayOf("A", "A Sharp", "B", "C", "C Sharp", "D", "D Sharp", "E", "F", "F Sharp", "G", "G Sharp")
 val numKeys = keys.size
@@ -36,7 +36,7 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 	private lateinit var extraBitmap: Bitmap
 	private val drawer = Drawer(resources)
 	private var note: Int = MIDDLE_C
-	private var showAll = false
+	private var showAll = true
 
 	constructor(context: Context) : super(context) {
 		getRandomNote()
@@ -70,10 +70,11 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		val y = lastTouchDownXY.y
 
 		// top section: change note randomly
-		if (textRect.contains(x, y)) {
+//		if (textRect.contains(x, y)) {
+		if (textRect.contains(x, y) || sheetMusicRect.contains(x, y)) {
 			getRandomNote()
-		} else if (sheetMusicRect.contains(x, y)) {
-			showAll = !showAll
+//		} else if (sheetMusicRect.contains(x, y)) {
+//			showAll = !showAll
 		} else { // bottom section: try to guess the key
 			guessKey(x, y)
 		}
@@ -108,10 +109,32 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 
 			drawText(canvas, textRect)
 
-//			if (showAll) {
-			drawSheetMusic(canvas, sheetMusicRect)
-//			}
-			
+			drawer.drawRect(canvas, sheetMusicRect, drawer.white)
+			if (showAll) {
+				var tempHeight = sheetMusicRect.height() / 2
+				val wasBase = isInBase(note)
+
+				// treble
+				if (wasBase) {
+					swapClefs()
+				}
+				var rect = Rect(sheetMusicRect)
+				rect.bottom -= tempHeight
+				drawSheetMusic(canvas, rect)
+
+				// base
+				swapClefs()
+				rect = Rect(sheetMusicRect)
+				rect.top += tempHeight
+				drawSheetMusic(canvas, rect)
+
+				if (wasBase != isInBase(note)) {
+					swapClefs()
+				}
+			} else {
+				drawSheetMusic(canvas, sheetMusicRect)
+			}
+
 			drawKeys(canvas, keysRect)
 		}
 	}
@@ -137,8 +160,6 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 	}
 
 	fun drawSheetMusic(canvas: Canvas, rect: Rect) {
-		drawer.drawRect(canvas, rect, drawer.white)
-
 		val svgWidth = 150
 		val svgRect = Rect(rect.left, rect.top, rect.left + svgWidth, rect.bottom)
 
@@ -198,7 +219,7 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 			relativeIndex += C_OFFSET
 			y = myTop - (lineMargin / 2) * relativeIndex
 
-			if (relativeIndex % 2 == 0 && relativeIndex > 1) {
+			if (myNote % 2 == 1 && relativeIndex > 1) {
 				shouldDrawLine = true
 			}
 		} else {
@@ -212,7 +233,11 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 				shouldDrawLine = true
 			}
 		}
-		drawer.drawNote(canvas, (stopX - startX) / 2, y, isSharp(note), shouldDrawLine)
+		drawer.drawNote(canvas, (stopX - startX) / 2, y + lineMargin / 2, isSharp(note), shouldDrawLine, lineMargin / 2)
+
+//		val left = (stopX - startX) / 2
+//		val right = left + 50
+//		drawer.drawRect(canvas, Rect(left, y, right, y + 50), drawer.blue)
 	}
 
 	private fun getNumSharps(startIn: Int, endIn: Int): Int {
