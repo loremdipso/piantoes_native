@@ -230,25 +230,25 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		for (i in 0 until 5) {
 			var y = myTop + lineMargin * i
 			var rightMargin = 0
-			if (showLabels) {
-				rightMargin = 100
+			if (showLabels && !showSpaces) {
+				rightMargin = 90
 			}
 			drawer.drawLine(canvas, startX, y, stopX - rightMargin, y)
 
 			if (showLabels) {
+				rightMargin = 70
 				var text = getLineName(i, isInBase(note))
-				var ty = y
 				if (showSpaces) {
 					if (i >= 4) {
 						continue;
 					}
 					text = getSpaceName(i, isInBase(note))
-					ty += lineMargin / 2
+					y += lineMargin / 2
 				}
 
 				var textBounds = Rect()
 				paint.getTextBounds(text, 0, text.length, textBounds)
-				canvas.drawText(text, rect.right - rightMargin + 30F, ty - textBounds.exactCenterY(), paint)
+				canvas.drawText(text, (rect.right - rightMargin).toFloat(), y - textBounds.exactCenterY(), paint)
 			}
 		}
 
