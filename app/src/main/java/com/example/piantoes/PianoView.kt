@@ -223,7 +223,7 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		if (isBase) {
 			var numSharps = getNumSharps(myNote + 1, MIDDLE_C)
 			relativeIndex += numSharps
-			var C_OFFSET = 2 // so we start at middle C
+			val C_OFFSET = 2 // so we start at middle C
 			relativeIndex += C_OFFSET
 			y = myTop - (lineMargin / 2) * relativeIndex
 
@@ -233,7 +233,7 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		} else {
 			var numSharps = getNumSharps(myNote, MIDDLE_C)
 			relativeIndex -= numSharps
-			var C_OFFSET = -2 // so we start at middle C
+			val C_OFFSET = -2 // so we start at middle C
 			relativeIndex += C_OFFSET
 			y = myBottom - (lineMargin / 2) * relativeIndex
 
@@ -241,11 +241,13 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 				shouldDrawLine = true
 			}
 		}
-		drawer.drawNote(canvas, (stopX - startX) / 2, y + lineMargin / 2, isSharp(note), shouldDrawLine, lineMargin / 2)
 
-//		val left = (stopX - startX) / 2
-//		val right = left + 50
-//		drawer.drawRect(canvas, Rect(left, y, right, y + 50), drawer.blue)
+		val noteWidth = (lineMargin * 1.3).toInt()
+		var offsetDirection = 1
+		if (isInBase(note)) {
+			offsetDirection = 0
+		}
+		drawer.drawNote(canvas, (stopX - startX) / 2, y, isSharp(myNote), shouldDrawLine, noteWidth, offsetDirection)
 	}
 
 	private fun getNumSharps(startIn: Int, endIn: Int): Int {

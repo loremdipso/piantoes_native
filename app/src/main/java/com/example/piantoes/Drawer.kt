@@ -10,7 +10,7 @@ import com.caverock.androidsvg.SVG
 
 
 private const val STROKE_WIDTH = 12f
-private const val LINE_WIDTH = 9f
+private const val LINE_THICKNESS = 9f
 private const val TEXT_SIZE = 150F
 
 class Drawer {
@@ -71,7 +71,7 @@ class Drawer {
 	}
 
 	fun drawLine(canvas: Canvas, startX: Int, startY: Int, stopX: Int, stopY: Int) {
-		canvas.drawLine(startX.toFloat(), startY.toFloat(), stopX.toFloat(), stopY.toFloat(), getStroke(black).apply { strokeWidth = LINE_WIDTH })
+		canvas.drawLine(startX.toFloat(), startY.toFloat(), stopX.toFloat(), stopY.toFloat(), getStroke(black).apply { strokeWidth = LINE_THICKNESS })
 	}
 
 	fun drawRect(canvas: Canvas, rect: Rect, fillColor: Int, strokeColor: Int? = null): Rect {
@@ -91,33 +91,31 @@ class Drawer {
 		return rect
 	}
 
-	fun drawNote(canvas: Canvas, centerXIn: Int, centerYIn: Int, isSharp: Boolean, shouldDrawLine: Boolean, yOffset: Int) {
-		val noteWidth = 70
+	fun drawNote(canvas: Canvas, centerXIn: Int, centerYIn: Int, isSharp: Boolean, shouldDrawLine: Boolean, noteWidth: Int, offsetDelta: Int) {
 		val noteHeight = ((noteWidth * quarter_note.documentHeight) / quarter_note.documentWidth).toInt()
 		var centerX = centerXIn
 		var centerY = centerYIn
+		centerY -= (offsetDelta * LINE_THICKNESS * 0.9).toInt()
 
-//		val noteYOffset = -(42F * noteHeight / 320F).toInt()
-		val noteYOffset = -10
-		drawSVG(
-				canvas,
-				Rect(centerX - noteWidth / 2,
-						centerY - noteHeight + noteYOffset,
-						centerX + noteWidth / 2,
-						centerY + noteYOffset
-				), quarter_note)
+		val noteRect = Rect(
+				centerX - noteWidth / 2,
+				centerY - noteHeight / 2,
+				centerX + noteWidth / 2,
+				centerY + noteHeight / 2
+		)
+
+		drawSVG(canvas, noteRect, quarter_note)
 
 		if (shouldDrawLine) {
 			var lineWidth = (noteWidth * 1.5).toInt()
-			var lineY = centerY - yOffset
+			var lineY = centerY
 			drawLine(canvas, centerX - lineWidth / 2, lineY, centerX + lineWidth / 2, lineY)
 		}
 
 		if (isSharp) {
 			val sharpWidth = (noteWidth * 0.75).toInt()
-			val sharpYOffset = 0
 			centerX -= noteWidth
-			drawSVG(canvas, Rect(centerX - sharpWidth / 2, centerY - sharpWidth + sharpYOffset, centerX + sharpWidth / 2, centerY + sharpYOffset), sharp)
+			drawSVG(canvas, Rect(centerX - sharpWidth / 2, centerY - sharpWidth / 2, centerX + sharpWidth / 2, centerY + sharpWidth / 2), sharp)
 		}
 	}
 }
