@@ -3,6 +3,9 @@ package com.example.piantoes
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
+import android.media.AudioManager
+import android.media.MediaPlayer
+import android.media.SoundPool
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnClickListener
@@ -52,17 +55,54 @@ fun isInBase(note: Int): Boolean {
 class PianoView : View, View.OnClickListener, View.OnTouchListener {
 	private lateinit var extraCanvas: Canvas
 	private lateinit var extraBitmap: Bitmap
+	private var soundPool: SoundPool
 	private val drawer = Drawer(resources)
 	private var note: Int = MIDDLE_C
 	private var showAll = true
 	private var showText = true
 	private var showLabels = false
 	private var showSpaces = false
+	private var muted = false
 
 	constructor(context: Context) : super(context) {
 		getRandomNote()
 		this.setOnTouchListener(this);
 		this.setOnClickListener(this);
+
+		@Suppress("DEPRECATION")
+		soundPool = SoundPool(15, AudioManager.STREAM_MUSIC, 0)
+		soundPool.load(context, R.raw.a3, 1)
+		soundPool.load(context, R.raw.c4, 1) // SHARP
+		soundPool.load(context, R.raw.b3, 1)
+		soundPool.load(context, R.raw.c4, 1)
+		soundPool.load(context, R.raw.c4, 1) // SHARP
+		soundPool.load(context, R.raw.d4, 1)
+		soundPool.load(context, R.raw.c4, 1) // SHARP
+		soundPool.load(context, R.raw.d4, 1)
+		soundPool.load(context, R.raw.c4, 1) // SHARP
+		soundPool.load(context, R.raw.e4, 1)
+		soundPool.load(context, R.raw.f4, 1)
+		soundPool.load(context, R.raw.c4, 1) // SHARP
+		soundPool.load(context, R.raw.g4, 1)
+		soundPool.load(context, R.raw.c4, 1) // SHARP
+	}
+
+	fun playSound(sound: Int) {
+		var id = (sound % numKeys) + 1
+		println("ID: " + id.toString())
+		soundPool.play(id, 1F, 1F, 0, 0, 1F);
+//			}
+//			mediaPlayer?.setOnCompletionListener {
+//				if (mediaPlayer != null) {
+//					if (mediaPlayer!!.isPlaying) {
+//						mediaPlayer!!.stop()
+//					}
+//					mediaPlayer!!.reset()
+//					mediaPlayer!!.release()
+//					mediaPlayer = null
+//				}
+//			}
+//		}
 	}
 
 	override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
@@ -188,7 +228,7 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		}
 	}
 
-	fun drawText(canvas: Canvas, rect: Rect) {
+	private fun drawText(canvas: Canvas, rect: Rect) {
 		drawer.drawRect(canvas, rect, drawer.licorice)
 		var text = getName(note)
 		if (!showText) {
@@ -202,7 +242,7 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		canvas.drawText(text, rect.left + (rect.right - rect.left) / 2F, rect.top + rect.height() / 2F - textBounds.exactCenterY(), paint)
 	}
 
-	fun drawSheetMusic(canvas: Canvas, rect: Rect) {
+	private fun drawSheetMusic(canvas: Canvas, rect: Rect) {
 		val svgWidth = 150
 		val svgRect = Rect(rect.left, rect.top, rect.left + svgWidth, rect.bottom)
 
@@ -336,8 +376,8 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 
 
 	// using a linked hashmap to preserve insertion order
-	var rectsToKeys: LinkedHashMap<Rect, Int> = LinkedHashMap(12)
-	fun drawKeys(canvas: Canvas, rect: Rect) {
+	private var rectsToKeys: LinkedHashMap<Rect, Int> = LinkedHashMap(12)
+	private fun drawKeys(canvas: Canvas, rect: Rect) {
 		drawer.drawRect(canvas, rect, drawer.blue)
 
 		var noteWidth = rect.width() / 7
@@ -383,9 +423,10 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		}
 	}
 
-	fun guessKey(x: Int, y: Int) {
+	private fun guessKey(x: Int, y: Int) {
 		for ((rect, tempNote) in rectsToKeys.asIterable().reversed()) {
 			if (rect.contains(x, y)) {
+				playSound(note)
 				if (note % numKeys != tempNote % numKeys) {
 					val wasBase = isInBase(note)
 					note = tempNote
