@@ -10,6 +10,7 @@ import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnClickListener
 import android.view.View.OnTouchListener
+import kotlin.concurrent.thread
 
 private const val MIDDLE_C = 39
 private const val C_RANGE = 23
@@ -56,6 +57,7 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 	private lateinit var extraCanvas: Canvas
 	private lateinit var extraBitmap: Bitmap
 	private var soundPool: SoundPool
+	private var soundThread: SoundThread
 	private val drawer = Drawer(resources)
 	private var note: Int = MIDDLE_C
 	private var showAll = true
@@ -72,37 +74,27 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		@Suppress("DEPRECATION")
 		soundPool = SoundPool(15, AudioManager.STREAM_MUSIC, 0)
 		soundPool.load(context, R.raw.a3, 1)
-		soundPool.load(context, R.raw.c4, 1) // SHARP
+		soundPool.load(context, R.raw.a3_sharp, 1)
 		soundPool.load(context, R.raw.b3, 1)
 		soundPool.load(context, R.raw.c4, 1)
-		soundPool.load(context, R.raw.c4, 1) // SHARP
+		soundPool.load(context, R.raw.c4_sharp, 1)
 		soundPool.load(context, R.raw.d4, 1)
-		soundPool.load(context, R.raw.c4, 1) // SHARP
-		soundPool.load(context, R.raw.d4, 1)
-		soundPool.load(context, R.raw.c4, 1) // SHARP
+		soundPool.load(context, R.raw.d4_sharp, 1)
 		soundPool.load(context, R.raw.e4, 1)
 		soundPool.load(context, R.raw.f4, 1)
-		soundPool.load(context, R.raw.c4, 1) // SHARP
+		soundPool.load(context, R.raw.f4_sharp, 1)
 		soundPool.load(context, R.raw.g4, 1)
-		soundPool.load(context, R.raw.c4, 1) // SHARP
+		soundPool.load(context, R.raw.g4_sharp, 1)
+
+		soundThread = SoundThread(soundPool)
+		thread {
+			soundThread.run()
+		}
 	}
 
 	fun playSound(sound: Int) {
 		var id = (sound % numKeys) + 1
-		println("ID: " + id.toString())
-		soundPool.play(id, 1F, 1F, 0, 0, 1F);
-//			}
-//			mediaPlayer?.setOnCompletionListener {
-//				if (mediaPlayer != null) {
-//					if (mediaPlayer!!.isPlaying) {
-//						mediaPlayer!!.stop()
-//					}
-//					mediaPlayer!!.reset()
-//					mediaPlayer!!.release()
-//					mediaPlayer = null
-//				}
-//			}
-//		}
+		soundThread.sounds.put(SoundItem(id, 1F))
 	}
 
 	override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
@@ -426,7 +418,7 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 	private fun guessKey(x: Int, y: Int) {
 		for ((rect, tempNote) in rectsToKeys.asIterable().reversed()) {
 			if (rect.contains(x, y)) {
-				playSound(note)
+				playSound(tempNote)
 				if (note % numKeys != tempNote % numKeys) {
 					val wasBase = isInBase(note)
 					note = tempNote
