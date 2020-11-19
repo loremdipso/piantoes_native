@@ -19,6 +19,7 @@ class Drawer {
 	var red: Int;
 	var blue: Int;
 	var yellow: Int;
+	var licorice: Int;
 	var background: Int;
 	var treble_clef: SVG;
 	var base_clef: SVG;
@@ -31,6 +32,7 @@ class Drawer {
 		red = ResourcesCompat.getColor(resources, R.color.red, null)
 		blue = ResourcesCompat.getColor(resources, R.color.blue, null)
 		yellow = ResourcesCompat.getColor(resources, R.color.yellow, null)
+		licorice = ResourcesCompat.getColor(resources, R.color.licorice, null)
 		background = ResourcesCompat.getColor(resources, R.color.background, null)
 		treble_clef = SVG.getFromResource(resources, R.raw.treble_clef)
 		base_clef = SVG.getFromResource(resources, R.raw.base_clef)

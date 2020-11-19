@@ -159,12 +159,17 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 	}
 
 	fun drawText(canvas: Canvas, rect: Rect) {
-		drawer.drawRect(canvas, rect, drawer.blue)
+		drawer.drawRect(canvas, rect, drawer.licorice)
 		var text = getName(note)
 		if (!showText) {
 			text = "?"
 		}
-		canvas.drawText(text, rect.left + (rect.right - rect.left) / 2F, rect.top + (rect.bottom - rect.top) / 2F, drawer.getFill(drawer.white))
+		val paint = drawer.getFill(drawer.white)
+
+		// necessary to get vertical text centering just right
+		var textBounds = Rect()
+		paint.getTextBounds(text, 0, text.length, textBounds)
+		canvas.drawText(text, rect.left + (rect.right - rect.left) / 2F, rect.top + rect.height() / 2F - textBounds.exactCenterY(), paint)
 	}
 
 	fun drawSheetMusic(canvas: Canvas, rect: Rect) {
