@@ -40,7 +40,6 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 
 	constructor(context: Context) : super(context) {
 		getRandomNote()
-//		this.setOnClickListener(this)
 		this.setOnTouchListener(this);
 		this.setOnClickListener(this);
 	}
@@ -71,9 +70,9 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		val y = lastTouchDownXY.y
 
 		// top section: change note randomly
-		if (y < height / 3) {
+		if (textRect.contains(x, y)) {
 			getRandomNote()
-		} else if (y < height / 3 * 2) { // middle section: do nothing
+		} else if (sheetMusicRect.contains(x, y)) {
 			showAll = !showAll
 		} else { // bottom section: try to guess the key
 			guessKey(x, y)
@@ -82,6 +81,11 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		invalidate() // force redraw
 	}
 
+
+	private var textRect = Rect(0, 0, 0, 0)
+	private var sheetMusicRect = Rect(0, 0, 0, 0)
+	private var keysRect = Rect(0, 0, 0, 0)
+
 	override fun onDraw(canvas: Canvas) {
 		super.onDraw(canvas)
 		canvas.drawBitmap(extraBitmap, 0f, 0f, null)
@@ -89,9 +93,26 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		// TODO: support screen rotation
 		if (height > width) {
 			var index = 0
-			drawText(canvas, Rect(0, height / 3 * index, width, height / 3 * ++index))
-			drawSheetMusic(canvas, Rect(0, height / 3 * index, width, height / 3 * ++index))
-			drawKeys(canvas, Rect(0, height / 3 * index, width, height / 3 * ++index))
+			var sectionHeight = height / 6
+
+			var numSections = 1
+			textRect = Rect(0, sectionHeight * index, width, sectionHeight * (index + numSections))
+			index += numSections
+
+			numSections = 3
+			sheetMusicRect = Rect(0, sectionHeight * index, width, sectionHeight * (index + numSections))
+			index += numSections
+
+			numSections = 2
+			keysRect = Rect(0, sectionHeight * index, width, sectionHeight * (index + numSections))
+
+			drawText(canvas, textRect)
+
+//			if (showAll) {
+			drawSheetMusic(canvas, sheetMusicRect)
+//			}
+			
+			drawKeys(canvas, keysRect)
 		}
 	}
 
@@ -103,7 +124,6 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		while (note % numKeys == oldNote) {
 			note = ((MIDDLE_C - C_RANGE)..(MIDDLE_C + C_RANGE)).random()
 		}
-		note = MIDDLE_C // TODO: remove
 
 		// if we were in base, stay there, and vice versa
 		if (wasInBase != isInBase(note)) {
@@ -130,7 +150,8 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 			drawer.drawSVG(canvas, svgRect, drawer.treble_clef)
 		}
 
-		val yMargin = 200
+		val yMargin = rect.height() / 3
+
 		val xMargin = 0
 		val myTop = rect.top + yMargin
 		val myBottom = rect.bottom - yMargin
@@ -150,6 +171,9 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 			var max = MIDDLE_C + C_RANGE
 			while (temp <= max) {
 				if (temp >= min && wasBase == isInBase(temp)) {
+					notes.add(temp)
+				} else if (temp == MIDDLE_C) {
+					// SPECIAL CASE: add middle C in either case
 					notes.add(temp)
 				}
 				temp += numKeys
@@ -266,8 +290,12 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 	fun guessKey(x: Int, y: Int) {
 		for ((rect, tempNote) in rectsToKeys.asIterable().reversed()) {
 			if (rect.contains(x, y)) {
-				if (note != tempNote) {
+				if (note % numKeys != tempNote % numKeys) {
+					val wasBase = isInBase(note)
 					note = tempNote
+					if (wasBase != isInBase(note)) {
+						swapClefs()
+					}
 				} else {
 					swapClefs()
 				}
@@ -287,5 +315,4 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 			}
 		}
 	}
-
 }
