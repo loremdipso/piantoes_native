@@ -92,9 +92,11 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		}
 	}
 
-	fun playSound(sound: Int) {
-		var id = (sound % numKeys) + 1
-		soundThread.sounds.put(SoundItem(id, 1F))
+	private fun playSound(sound: Int) {
+		if (!muted) {
+			var id = (sound % numKeys) + 1
+			soundThread.sounds.put(SoundItem(id, 1F))
+		}
 	}
 
 	override fun onSizeChanged(width: Int, height: Int, oldWidth: Int, oldHeight: Int) {
@@ -124,7 +126,11 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 
 		// top section: change note randomly
 		if (textRect.contains(x, y)) {
-			showText = !showText
+			if (x > width / 5 * 4) { // if we press on the far right, toggle mute
+				muted = !muted
+			} else {
+				showText = !showText
+			}
 		} else if (sheetMusicRect.contains(x, y)) {
 			if (x < width / 5) { // if we press on the far left, toggle show all
 				showAll = !showAll
@@ -232,6 +238,13 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		var textBounds = Rect()
 		paint.getTextBounds(text, 0, text.length, textBounds)
 		canvas.drawText(text, rect.left + (rect.right - rect.left) / 2F, rect.top + rect.height() / 2F - textBounds.exactCenterY(), paint)
+
+		var icon = drawer.unmuted
+		var iconSize = 150
+		if (muted) {
+			icon = drawer.muted
+		}
+		drawer.drawSVG(canvas, Rect(rect.right - iconSize, rect.top, rect.right, rect.top + iconSize), icon)
 	}
 
 	private fun drawSheetMusic(canvas: Canvas, rect: Rect) {

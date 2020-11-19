@@ -25,6 +25,8 @@ class Drawer {
 	var base_clef: SVG;
 	var quarter_note: SVG;
 	var sharp: SVG;
+	var muted: SVG;
+	var unmuted: SVG;
 
 	constructor(resources: Resources) {
 		black = ResourcesCompat.getColor(resources, R.color.black, null)
@@ -38,6 +40,8 @@ class Drawer {
 		base_clef = SVG.getFromResource(resources, R.raw.base_clef)
 		quarter_note = SVG.getFromResource(resources, R.raw.quarter_note)
 		sharp = SVG.getFromResource(resources, R.raw.sharp)
+		muted = SVG.getFromResource(resources, R.raw.muted)
+		unmuted = SVG.getFromResource(resources, R.raw.unmuted)
 	}
 
 	fun getFill(colorVal: Int): Paint {
