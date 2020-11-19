@@ -37,6 +37,7 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 	private val drawer = Drawer(resources)
 	private var note: Int = MIDDLE_C
 	private var showAll = true
+	private var showText = true
 
 	constructor(context: Context) : super(context) {
 		getRandomNote()
@@ -70,11 +71,14 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 		val y = lastTouchDownXY.y
 
 		// top section: change note randomly
-//		if (textRect.contains(x, y)) {
-		if (textRect.contains(x, y) || sheetMusicRect.contains(x, y)) {
-			getRandomNote()
-//		} else if (sheetMusicRect.contains(x, y)) {
-//			showAll = !showAll
+		if (textRect.contains(x, y)) {
+			showText = !showText
+		} else if (sheetMusicRect.contains(x, y)) {
+			if (x < width / 5) { // if we press on the far left, toggle show all
+				showAll = !showAll
+			} else { // otherwise swap the random notes
+				getRandomNote()
+			}
 		} else { // bottom section: try to guess the key
 			guessKey(x, y)
 		}
@@ -156,7 +160,11 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 
 	fun drawText(canvas: Canvas, rect: Rect) {
 		drawer.drawRect(canvas, rect, drawer.blue)
-		canvas.drawText(getName(note), rect.left + (rect.right - rect.left) / 2F, rect.top + (rect.bottom - rect.top) / 2F, drawer.getFill(drawer.white))
+		var text = getName(note)
+		if (!showText) {
+			text = "?"
+		}
+		canvas.drawText(text, rect.left + (rect.right - rect.left) / 2F, rect.top + (rect.bottom - rect.top) / 2F, drawer.getFill(drawer.white))
 	}
 
 	fun drawSheetMusic(canvas: Canvas, rect: Rect) {
