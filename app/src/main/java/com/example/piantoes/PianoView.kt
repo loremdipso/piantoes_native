@@ -9,7 +9,7 @@ import android.view.View.OnClickListener
 import android.view.View.OnTouchListener
 
 private const val MIDDLE_C = 39
-private const val C_RANGE = 25
+private const val C_RANGE = 23
 
 var keys = arrayOf("A", "A#", "B", "C", "C#", "D", "D#", "E", "F", "F#", "G", "G#")
 val numKeys = keys.size
@@ -287,7 +287,8 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 			relativeIndex += C_OFFSET
 			y = myTop - (lineMargin / 2) * relativeIndex
 
-			if (myNote % 2 == 1 && relativeIndex > 1) {
+			// TODO: remove all these magic numbers
+			if ((myNote % 2 == 1 && relativeIndex > 1) || relativeIndex == -12 || relativeIndex == -10) {
 				shouldDrawLine = true
 			}
 		} else {
@@ -297,7 +298,7 @@ class PianoView : View, View.OnClickListener, View.OnTouchListener {
 			relativeIndex += C_OFFSET
 			y = myBottom - (lineMargin / 2) * relativeIndex
 
-			if (relativeIndex % 2 == 0 && ((relativeIndex - C_OFFSET) <= 0 || (relativeIndex - C_OFFSET) > numKeys)) {
+			if (relativeIndex % 2 == 0 && ((relativeIndex - C_OFFSET) <= 0 || (relativeIndex - C_OFFSET) > numKeys) || myNote == 60) {
 				shouldDrawLine = true
 			}
 		}
